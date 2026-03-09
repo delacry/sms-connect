@@ -204,9 +204,22 @@ class SmsConnect
 
 		curl_setopt_array($curl, $curlOpt);
 		$response = curl_exec($curl);
+
+		if ($response === false) {
+			$error = curl_error($curl);
+			$errno = curl_errno($curl);
+			curl_close($curl);
+			throw new RuntimeException('cURL request failed (' . $errno . '): ' . $error);
+		}
+
 		curl_close($curl);
 
-		$response = $this->convertToArray(simplexml_load_string($response));
+		$xml = simplexml_load_string($response);
+		if ($xml === false) {
+			throw new RuntimeException('Invalid XML response: ' . substr($response, 0, 500));
+		}
+
+		$response = $this->convertToArray($xml);
 
 		return $response;
 	}
